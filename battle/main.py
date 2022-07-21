@@ -9,11 +9,12 @@ thunder = Spell("Thunder", 20, 400, "black")
 blizzard = Spell("Blizzard", 25, 600, "black")
 meteor = Spell("Meteor", 40, 1200, "black")
 quake = Spell("Quake", 32, 850, "black")
+firestorm = Spell("Fire Storm", 85, 3000, "black")
 
 # Create White Magic
 cure = Spell("Cure", 25, 620, "white")
 cura = Spell("Cura", 40, 1200, "white")
-
+revive = Spell("Revive", 100, 9999, "rez")
 
 # Create some Items
 potion = Item("Potion", "potion", "Heals 500 HP", 500)
@@ -26,24 +27,24 @@ grenade = Item("Grenade", "attack", "Deals 1000 damage", 1000)
 spear = Item("Spear", "attack", "Deals 2500 damage", 2500)
 
 
-player_spells = [fire, thunder, blizzard, meteor, cure, cura]
+player_spells = [fire, thunder, blizzard, meteor, cure, cura, revive]
 enemy_spells = [fire, meteor, cure]
 player_items = [{"item": potion, "quantity": 15},
                 {"item": hipotion, "quantity": 5},
                 {"item": superpotion, "quantity": 5},
                 {"item": elixer, "quantity": 5},
                 {"item": megaelixer, "quantity": 1},
-                {"item": grenade, "quantity": 3},
-                {"item": spear, "quantity": 5}]
+                {"item": grenade, "quantity": 5},
+                {"item": spear, "quantity": 1}]
 
 # Instantiate People
-player1 = Person("Brody", 3260, 265, 320, 34, player_spells, player_items)
-player2 = Person("Daddy", 4160, 185, 380, 34, player_spells, player_items)
-player3 = Person("Momma", 3080, 330, 260, 34, player_spells, player_items)
+player1 = Person("Brody", "player", 3260, 265, 435, 220, 0, player_spells, player_items)
+player2 = Person("Daddy", "player", 4160, 185, 225, 310, 0, player_spells, player_items)
+player3 = Person("Momma", "player", 3080, 330, 360, 135, 0, player_spells, player_items)
 
-enemy1 = Person("Vecna", 12380, 720, 525, 25, enemy_spells, [])
-enemy2 = Person("Imp", 1400, 130, 625, 325, enemy_spells, [])
-enemy3 = Person("Imp", 1400, 130, 625, 325, enemy_spells, [])
+enemy1 = Person("Vecna", "enemy", 12380, 720, 525, 125, 0, enemy_spells, [])
+enemy2 = Person("Imp", "enemy", 1400, 130, 625, 325, 0, enemy_spells, [])
+enemy3 = Person("Imp", "enemy", 1400, 130, 625, 325, 0, enemy_spells, [])
 
 players = [player1, player2, player3]
 enemies = [enemy1, enemy2, enemy3]
@@ -72,6 +73,7 @@ while running:
         choice = input("    Choose action: ")
         index = int(choice) - 1
 
+        # Chose attack
         if index == 0:
             dmg = player.generate_damage()
             enemy = player.choose_target(enemies)
@@ -83,6 +85,7 @@ while running:
                 print(enemies[enemy].name + " has died.")
                 del enemies[enemy]
 
+        # Chose magic
         elif index == 1:
             player.choose_magic()
             magic_choice = int(input("Choose magic: ")) - 1
@@ -113,12 +116,17 @@ while running:
                 if enemies[enemy].get_hp() == 0:
                     print(enemies[enemy].name + " has died.")
                     del enemies[enemy]
+            elif spell.type == "rez":
+                target = player.choose_friendly_target(players)
+                players[target].heal(magic_dmg)
+                print(bcolors.OKBLUE + "\n" + player.name, "casts", spell.name + " which revives", players[target].name, "from the dead." + bcolors.ENDC)
 
+        # Chose item
         elif index == 2:
             player.choose_item()
             item_choice = int(input("Choose item: ")) - 1
 
-            if item_choice == -1:
+            if item_choice == -1 or item_choice > len(player.items) - 1:
                 continue
 
             item = player.items[item_choice]["item"]
@@ -151,6 +159,7 @@ while running:
 
                 if enemies[enemy].get_hp() == 0:
                     print(enemies[enemy].name + " has died.")
+
                     del enemies[enemy]
 
     # Check if battle is over
@@ -183,6 +192,7 @@ while running:
 
         if enemy_choice == 0:
             # Chose attack
+            print("Enemy chooses attack")
             target = random.randrange(0, 3)
             enemy_dmg = enemy.generate_damage()
 
@@ -192,15 +202,17 @@ while running:
 
         elif enemy_choice == 1:
             # Chose magic
+            print("Enemy chooses magic")
             spell, magic_dmg = enemy.choose_enemy_spell()
             enemy.reduce_mp(spell.cost)
 
             if spell.type == "white":
+                print("Enemy white")
                 enemy.heal(magic_dmg)
                 print(bcolors.WARNING + spell.name + " heals " + enemy.name + " for", str(magic_dmg),
                       "HP." + bcolors.ENDC)
             elif spell.type == "black":
-
+                print("Enemy black")
                 target = random.randrange(0, 3)
 
                 players[target].take_damage(magic_dmg)
@@ -210,7 +222,4 @@ while running:
 
                 if players[target].get_hp() == 0:
                     print(players[target].name, "has died.")
-                    del players[target]
-
-
-                    #print("Enemy chose", spell, "damage is", magic_dmg)
+                    #del players[target]

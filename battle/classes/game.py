@@ -14,7 +14,7 @@ class bcolors:
 
 
 class Person:
-    def __init__(self, name, hp, mp, atk, df, magic, items):
+    def __init__(self, name, type, hp, mp, atk, df, exp, magic, items):
         self.maxhp = hp
         self.hp = hp
         self.maxmp = mp
@@ -22,16 +22,22 @@ class Person:
         self.atkh = atk + 50
         self.atkl = atk - 50
         self.df = df
+        self.exp = exp
         self.magic = magic
         self.items = items
         self.actions = ["Attack", "Magic", "Items"]
         self.name = name
+        self.type = type
 
     def generate_damage(self):
         return random.randrange(self.atkl, self.atkh)
 
-    def take_damage(self, dmg):
-        self.hp -= dmg
+    def take_damage(self, dmg, modifier = 1):
+        mod_df = self.df * modifier
+        if dmg > mod_df:
+            calculated_dmg = dmg - mod_df
+            self.hp -= calculated_dmg
+
         if self.hp < 0:
             self.hp = 0
         return self.hp
@@ -89,6 +95,16 @@ class Person:
                 print("        " + str(i) + ".", enemy.name)
                 i += 1
         choice = int(input("    Choose target:")) - 1
+        return choice
+
+    def choose_friendly_target(self, players):
+        i = 1
+
+        print("\n" + bcolors.OKGREEN + bcolors.BOLD + "    PARTY MEMBER:" + bcolors.ENDC)
+        for player in players:
+            print("        " + str(i) + ".", player.name)
+            i += 1
+        choice = int(input("    Choose party member:")) - 1
         return choice
 
     def get_enemy_stats(self):
@@ -183,8 +199,14 @@ class Person:
 
         pct = self.hp / self.maxhp * 100
 
-        if self.mp < spell.cost or spell.type == "white" and pct > 50:
-            self.choose_enemy_spell()
+        if self.mp < spell.cost or (spell.type == "white" and pct > 50):
+            return self.choose_enemy_spell()
         else:
             return spell, magic_dmg
 
+    def earn_exp(self, amt):
+        self.exp += amt
+
+    def compute_lvl(self):
+        if self.exp < 100:
+            return
