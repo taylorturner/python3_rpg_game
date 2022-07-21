@@ -1,5 +1,6 @@
 import random
 
+
 class Spell:
     def __init__(self, name, cost, dmg, type):
         self.name = name
@@ -8,6 +9,6 @@ class Spell:
         self.type = type
 
     def generate_damage(self):
-        low = self.dmg - 15
-        high = self.dmg + 15
+        low = self.dmg - 50
+        high = self.dmg + 50
         return random.randrange(low, high)
